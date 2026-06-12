@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Numerical Methods Visual</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 40px;
+      background: url("image/lud.png");
+      background-size: cover;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding-left: 135px;
+    }
+
+      .back-button {
+      position: absolute;
+      top: 24px;
+      left: 40px;
+    }
+
+    .back-button button {
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      background-color: #c8b53c;
+      color: black;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 14px;
+    }
+
+    .back-button button:hover {
+      background-color: #f5f1b5;
+    }
+
+
+    .right-container {
+      width: 450px;
+      height: 440px;
+      margin-top: 70px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      border-radius: 10px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+    }
+
+    .right-container:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .right-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .action-button {
+      margin-top: 30px;
+      margin-left: 240px;
+      margin-right: auto;
+      padding: 10px 20px;
+      font-size: 20px;
+      font-family: 'Courier New', monospace;
+      background-color: #d5c245;
+      color: #000000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .action-button:hover {
+      background-color: #e3e2c2;
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+
+    <div class="back-button">
+    <a href="FrontPage.html">
+    <button><strong>⬅ Back</strong></button></a>
+  </div>
+
+  <div class="right-container">
+    <img src="image/ginfo.png" alt="Numerical Methods Visual">
+  </div>
+  <a href="GaussEliminationGaussJordan.html">
+  <button class="action-button"><strong>Enter Equation</strong></button></a>
+</body>
+</html>

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LU Decomposition Solver (3x3)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet" />
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: url("image/eqbg.png") center center no-repeat fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-family: "Gloria Hallelujah", cursive;
+      margin-bottom: 10px;
+      color: #fff;
+      text-shadow: 1px 1px 3px rgb(0, 0, 0);
+    }
+
+      .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+
+    .back-button button {
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      background-color: #c8b53c;
+      color: black;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 14px;
+    }
+
+    .back-button button:hover {
+      background-color: #f5f1b5;
+    }
+
+    table input {
+      width: 70px;
+      padding: 5px;
+      font-size: 20px;
+      text-align: center;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    td {
+      padding: 5px;
+      color: white;
+      font-weight: bold;
+    }
+
+    button {
+      margin: 20px;
+      margin-top: -10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #d5c245;
+      color: rgb(0, 0, 0);
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #e3e2c2;
+    }
+
+    .result {
+      white-space: pre-wrap;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+      max-width: 700px;
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: "Courier New", monospace;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+    <div class="back-button">
+    <a href="lu info.html">
+    <button><strong>⬅ Back</strong></button></a>
+  </div>
+
+  <h1>LU Decomposition Solver</h1>
+
+  <table>
+    <tbody>
+      <tr>
+        <td><input id="r1.1" type="number" /></td>
+        <td><input id="r1.2" type="number" /></td>
+        <td><input id="r1.3" type="number" /></td>
+        <td>=</td>
+        <td><input id="rd0" type="number" /></td>
+      </tr>
+      <tr>
+        <td><input id="r2.1" type="number" /></td>
+        <td><input id="r2.2" type="number" /></td>
+        <td><input id="r2.3" type="number" /></td>
+        <td>=</td>
+        <td><input id="rd1" type="number" /></td>
+      </tr>
+      <tr>
+        <td><input id="r3.1" type="number" /></td>
+        <td><input id="r3.2" type="number" /></td>
+        <td><input id="r3.3" type="number" /></td>
+        <td>=</td>
+        <td><input id="rd2" type="number" /></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <button onclick="solveLU()"><strong>Solve with LU Decomposition</strong></button>
+
+  <div class="result" id="output"></div>
+
+  <script>
+    function solveLU() {
+      const output = document.getElementById("output");
+      output.textContent = "";
+
+      function log(msg) {
+        output.textContent += msg + "\n";
+      }
+
+      function formatNumber(num) {
+        if (Number.isNaN(num)) return "error";
+        if (Number.isInteger(num)) return num.toString();
+        return parseFloat(num.toFixed(4)).toString();
+      }
+
+      function formatMatrix(M, label = "") {
+        const leftBrackets = ["⎡", "⎢", "⎣"];
+        const rightBrackets = ["⎤", "⎥", "⎦"];
+
+        let strMatrix = M.map((row) =>
+          row.map((v) => formatNumber(v))
+        );
+        const cols = M[0].length;
+        const colWidths = [];
+
+        for (let c = 0; c < cols; c++) {
+          let maxLen = 0;
+          for (let r = 0; r < M.length; r++) {
+            maxLen = Math.max(maxLen, strMatrix[r][c].length);
+          }
+          colWidths.push(maxLen);
+        }
+
+        const rows = M.map((row, i) => {
+          let rowStr = row
+            .map((v, c) => {
+              let s = formatNumber(v);
+              return s.padStart(colWidths[c], " ");
+            })
+            .join(" ");
+          return `${leftBrackets[i]} ${rowStr} ${rightBrackets[i]}`;
+        });
+
+        return label + "\n" + rows.join("\n") + "\n";
+      }
+
+      function formatAugmentedMatrix(M, v, label = "") {
+        const leftBrackets = ["⎡", "⎢", "⎣"];
+        const rightBrackets = ["⎤", "⎥", "⎦"];
+
+        let strMatrix = M.map((row) =>
+          row.map((val) => formatNumber(val))
+        );
+        let strVector = v.map((val) => formatNumber(val));
+
+        const cols = M[0].length;
+        const colWidths = [];
+
+        for (let c = 0; c < cols; c++) {
+          let maxLen = 0;
+          for (let r = 0; r < M.length; r++) {
+            maxLen = Math.max(maxLen, strMatrix[r][c].length);
+          }
+          colWidths.push(maxLen);
+        }
+
+        const vectorWidth = Math.max(...strVector.map((s) => s.length));
+
+        const rows = M.map((row, i) => {
+          let rowStr = row
+            .map((val, c) => strMatrix[i][c].padStart(colWidths[c], " "))
+            .join(" ");
+          let vecStr = strVector[i].padStart(vectorWidth, " ");
+          return `${leftBrackets[i]} ${rowStr} | ${vecStr} ${rightBrackets[i]}`;
+        });
+
+        return label + "\n" + rows.join("\n") + "\n";
+      }
+
+      function formatVectorMatrix(v, label = "") {
+        const leftBrackets = ["⎡", "⎢", "⎣"];
+        const rightBrackets = ["⎤", "⎥", "⎦"];
+
+        const strVector = v.map((val) => formatNumber(val));
+        const width = Math.max(...strVector.map((s) => s.length));
+
+        const rows = strVector.map((s, i) => {
+          return `${leftBrackets[i]} ${s.padStart(width, " ")} ${rightBrackets[i]}`;
+        });
+
+        return label + "\n" + rows.join("\n") + "\n";
+      }
+
+      const A = [
+        [
+          parseFloat(document.getElementById("r1.1").value),
+          parseFloat(document.getElementById("r1.2").value),
+          parseFloat(document.getElementById("r1.3").value),
+        ],
+        [
+          parseFloat(document.getElementById("r2.1").value),
+          parseFloat(document.getElementById("r2.2").value),
+          parseFloat(document.getElementById("r2.3").value),
+        ],
+        [
+          parseFloat(document.getElementById("r3.1").value),
+          parseFloat(document.getElementById("r3.2").value),
+          parseFloat(document.getElementById("r3.3").value),
+        ],
+      ];
+
+      const b = [
+        parseFloat(document.getElementById("rd0").value),
+        parseFloat(document.getElementById("rd1").value),
+        parseFloat(document.getElementById("rd2").value),
+      ];
+
+      const n = 3;
+      let U = A.map((row) => row.slice());
+      let L = Array.from({ length: n }, () => Array(n).fill(0));
+      for (let i = 0; i < n; i++) L[i][i] = 1;
+
+      // Added note before solution starts
+      log("Note: \nLU Decomposition splits matrix A into L (lower triangular) and U (upper triangular) matrices. " +
+          "We use elimination to find U and multipliers fill L. " +
+          "Then solve LY = B by forward substitution and UX = Y by backward substitution.\n");
+
+      log(formatMatrix(A, "Original Matrix:\n"));
+      log(formatVectorMatrix(b, "Original value of B:\n"));
+
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const factor = U[j][i] / U[i][i];
+          L[j][i] = factor;
+          log(`R${j + 1} = R${j + 1} - (${formatNumber(factor)}) * R${i + 1}`);
+          for (let k = 0; k < n; k++) {
+            U[j][k] -= factor * U[i][k];
+          }
+        }
+        log("\nMatrix after elimination step:");
+        log(formatMatrix(U));
+      }
+
+      log(formatMatrix(L, "L matrix:\n"));
+
+      log("\nL matrix with B:");
+      log(formatAugmentedMatrix(L, b, ""));
+
+      const y = Array(n).fill(0);
+      for (let i = 0; i < n; i++) {
+        y[i] = b[i];
+        for (let j = 0; j < i; j++) {
+          y[i] -= L[i][j] * y[j];
+        }
+        y[i] /= L[i][i];
+      }
+
+      const x = Array(n).fill(0);
+      x[2] = y[2] / U[2][2];
+      x[1] = (y[1] - U[1][2] * x[2]) / U[1][1];
+      x[0] = (y[0] - U[0][1] * x[1] - U[0][2] * x[2]) / U[0][0];
+
+      log("\nSolving for y:");
+      log(`y3 = ${formatNumber(y[2])} / ${formatNumber(U[2][2])} = ${formatNumber(x[2])}`);
+      log(
+        `y2 = (${formatNumber(y[1])} - (${formatNumber(U[1][2])} * ${formatNumber(x[2])})) / ${formatNumber(
+          U[1][1]
+        )} = ${formatNumber(x[1])}`
+      );
+      log(
+        `y1 = (${formatNumber(y[0])} - (${formatNumber(U[0][1])} * ${formatNumber(x[1])}) - (${formatNumber(
+          U[0][2]
+        )} * ${formatNumber(x[2])})) / ${formatNumber(U[0][0])} = ${formatNumber(x[0])}`
+      );
+
+      const newB = [x[0], x[1], x[2]];
+
+      log("\nNew value of B from y:");
+      log(formatVectorMatrix(newB, ""));
+
+      log("\nLast matrix after elimination (U matrix) with new value of B:");
+      log(formatAugmentedMatrix(U, newB, ""));
+
+      const y2 = newB.slice();
+      const x2 = Array(n).fill(0);
+      x2[2] = y2[2] / U[2][2];
+      x2[1] = (y2[1] - U[1][2] * x2[2]) / U[1][1];
+      x2[0] = (y2[0] - U[0][1] * x2[1] - U[0][2] * x2[2]) / U[0][0];
+
+      log("\nSolving again using last matrix and new value of B:");
+      log(`x3 = ${formatNumber(y2[2])} / ${formatNumber(U[2][2])} = ${formatNumber(x2[2])}`);
+      log(
+        `x2 = (${formatNumber(y2[1])} - (${formatNumber(U[1][2])} * ${formatNumber(x2[2])})) / ${formatNumber(
+          U[1][1]
+        )} = ${formatNumber(x2[1])}`
+      );
+      log(
+        `x1 = (${formatNumber(y2[0])} - (${formatNumber(U[0][1])} * ${formatNumber(x2[1])}) - (${formatNumber(
+          U[0][2]
+        )} * ${formatNumber(x2[2])})) / ${formatNumber(U[0][0])} = ${formatNumber(x2[0])}`
+      );
+
+      log(`\nFinal Answer: x1 = ${formatNumber(x2[0])}, x2 = ${formatNumber(x2[1])}, x3 = ${formatNumber(x2[2])}`);
+    }
+  </script>
+</body>
+</html>

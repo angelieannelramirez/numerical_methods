@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gauss Elimination & Gauss-Jordan Solver</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: url("image/eqbg.png") center center no-repeat fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+    }
+
+    .back-button button {
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      background-color: #c8b53c;
+      color: black;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 14px;
+    }
+
+    .back-button button:hover {
+      background-color: #f5f1b5;
+    }
+
+    h1 {
+      font-family: 'Gloria Hallelujah', cursive;
+      margin-bottom: 10px;
+      color: #fff;
+      text-shadow: 1px 1px 3px rgb(0, 0, 0);
+    }
+
+    table input {
+      width: 70px;
+      padding: 5px;
+      font-size: 20px;
+      text-align: center;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    td {
+      padding: 5px;
+    }
+
+    button {
+      margin: 20px;
+      margin-top: -10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #d5c245;
+      color: rgb(0, 0, 0);
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #e3e2c2;
+    }
+
+    .result {
+      white-space: pre;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      max-width: 600px;
+      width: 100%;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+
+    p {
+      color: azure;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="back-button">
+    <a href="gauss info.html">
+    <button><strong>⬅ Back</strong></button></a>
+  </div>
+
+  <h1>Gauss Elimination & Gauss-Jordan</h1>
+
+  <table>
+    <tbody>
+      <tr>
+        <td><input id="r1.1" type="number"></td>
+        <td><input id="r1.2" type="number"></td>
+        <td><input id="r1.3" type="number"></td>
+        <td><p>=</p></td>
+        <td><input id="rd0" type="number"></td>
+      </tr>
+      <tr>
+        <td><input id="r2.1" type="number"></td>
+        <td><input id="r2.2" type="number"></td>
+        <td><input id="r2.3" type="number"></td>
+        <td><p>=</p></td>
+        <td><input id="rd1" type="number"></td>
+      </tr>
+      <tr>
+        <td><input id="r3.1" type="number"></td>
+        <td><input id="r3.2" type="number"></td>
+        <td><input id="r3.3" type="number"></td>
+        <td><p>=</p></td>
+        <td><input id="rd2" type="number"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div>
+    <button onclick="solve('gauss')"><strong>Solve with Gauss Elimination</strong></button>
+    <button onclick="solve('gauss-jordan')"><strong>Solve with Gauss-Jordan</strong></button>
+  </div>
+
+  <div class="result" id="output"></div>
+
+  <script>
+    function getMatrix() {
+      let A = [], B = [];
+      const ids = [
+        ['r1.1', 'r1.2', 'r1.3'],
+        ['r2.1', 'r2.2', 'r2.3'],
+        ['r3.1', 'r3.2', 'r3.3']
+      ];
+      for (let i = 0; i < 3; i++) {
+        A[i] = [];
+        for (let j = 0; j < 3; j++) {
+          A[i][j] = parseFloat(document.getElementById(ids[i][j]).value) || 0;
+        }
+        B[i] = parseFloat(document.getElementById(`rd${i}`).value) || 0;
+      }
+      return { A, B };
+    }
+
+    function formatNumber(n) {
+      if (isNaN(n) || !isFinite(n)) return "error";
+      return parseFloat(n.toFixed(6)).toString();
+    }
+
+    function matrixToString(M) {
+      const colWidths = Array(M[0].length).fill(0);
+      for (let i = 0; i < M.length; i++) {
+        for (let j = 0; j < M[i].length; j++) {
+          const str = formatNumber(M[i][j]);
+          if (str.length > colWidths[j]) colWidths[j] = str.length;
+        }
+      }
+
+      const leftBrackets = ['⎡', '⎢', '⎣'];
+      const rightBrackets = ['⎤', '⎥', '⎦'];
+      const dividerIndex = M[0].length - 2;
+
+      return M.map((row, i) => {
+        const left = leftBrackets[i] || '⎢';
+        const right = rightBrackets[i] || '⎥';
+        let paddedRow = row.map((val, j) => {
+          let str = formatNumber(val).padStart(colWidths[j], ' ');
+          return j === dividerIndex ? str + ' |' : str;
+        }).join('  ');
+        return `${left} ${paddedRow} ${right}`;
+      }).join('\n');
+    }
+
+    function solve(method) {
+      const { A, B } = getMatrix();
+      let steps = '';
+
+      steps += "NOTE:\nGauss Elimination and Gauss-Jordan Elimination are methods for solving systems of equations using matrices.\n";
+      steps += "Gauss Elimination turns the matrix into a triangle with zeros below the diagonal and solves it by back-substitution.\n";
+      steps += "Gauss-Jordan goes further by turning pivot values to 1 and making everything else in the column zero,\nallowing direct reading of the solution.\n\n";
+
+      let M = A.map((row, i) => [...row, B[i]]);
+      steps += 'Original Matrix:\n\n' + matrixToString(M) + '\n\n';
+
+      for (let i = 0; i < 3; i++) {
+        if (M[i][i] === 0) {
+          for (let k = i + 1; k < 3; k++) {
+            if (M[k][i] !== 0) {
+              [M[i], M[k]] = [M[k], M[i]];
+              steps += `Swapped row ${i + 1} with row ${k + 1}:\n` + matrixToString(M) + '\n\n';
+              break;
+            }
+          }
+        }
+
+        if (method === 'gauss-jordan') {
+          let pivot = M[i][i];
+          if (pivot !== 0) {
+            steps += `R${i + 1} = R${i + 1} / ${formatNumber(pivot)}\n\n`;
+            for (let j = 0; j < 4; j++) {
+              M[i][j] /= pivot;
+            }
+            steps += matrixToString(M) + '\n\n';
+          }
+        }
+
+        for (let k = 0; k < 3; k++) {
+          if (k !== i && (method === 'gauss-jordan' || k > i)) {
+            let factor = M[k][i] / M[i][i];
+            if (factor !== 0 && !isNaN(factor)) {
+              steps += `R${k + 1} = R${k + 1} - (${formatNumber(factor)}) * R${i + 1}\n\n`;
+              for (let j = 0; j < 4; j++) {
+                M[k][j] -= factor * M[i][j];
+              }
+              steps += matrixToString(M) + '\n\n';
+            }
+          }
+        }
+      }
+
+      let solution = [];
+      const variableNames = ['x', 'y', 'z'];
+
+      if (method === 'gauss') {
+        for (let i = 2; i >= 0; i--) {
+          let sum = 0;
+          for (let j = i + 1; j < 3; j++) {
+            sum += M[i][j] * solution[j];
+          }
+          let result = (M[i][3] - sum) / M[i][i];
+          if (!isFinite(result) || isNaN(result)) result = 'error';
+          solution[i] = result;
+          steps += `${variableNames[i]} = (${formatNumber(M[i][3])} - ${formatNumber(sum)}) / ${formatNumber(M[i][i])} = ${formatNumber(result)}\n`;
+        }
+      } else {
+        for (let i = 0; i < 3; i++) {
+          let val = M[i][3];
+          if (!isFinite(val) || isNaN(val)) val = 'error';
+          solution[i] = val;
+        }
+      }
+
+      steps += '\nFinal Answer(x,y,z):\n';
+      for (let i = 0; i < 3; i++) {
+        steps += `${variableNames[i]} = ${formatNumber(solution[i])}\n`;
+      }
+
+      document.getElementById('output').textContent = steps;
+    }
+  </script>
+</body>
+</html>

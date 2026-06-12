@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cramer's Rule Solver (3x3)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Gloria+Hallelujah&display=swap" rel="stylesheet" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: url("image/eqbg.png") center center no-repeat fixed;
+      background-size: cover;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+    }
+
+    .back-button button {
+      padding: 8px 14px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      background-color: #c8b53c;
+      color: black;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 14px;
+    }
+
+    .back-button button:hover {
+      background-color: #f5f1b5;
+    }
+
+    h1 {
+      font-family: 'Gloria Hallelujah', cursive;
+      margin-bottom: 5px;
+      color: #fff;
+      text-shadow: 1px 1px 3px rgb(0, 0, 0);
+    }
+
+    table input {
+      width: 70px;
+      padding: 5px;
+      font-size: 20px;
+      text-align: center;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    td {
+      padding: 5px;
+      color: white;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #d5c245;
+      color: rgb(0, 0, 0);
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: -20px;
+    }
+
+    button:hover {
+      background-color: #e3e2c2;
+    }
+
+    .result {
+      margin-top: 15px;
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 600px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+    }
+
+    p {
+      color: azure;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="back-button">
+    <a href="Cramer info.html">
+      <button><strong>⬅ Back</strong></button>
+    </a>
+  </div>
+
+  <h1>Cramer's Rule</h1>
+
+  <table>
+    <tr>
+      <td><input id="r1.1" type="number"></td>
+      <td><input id="r1.2" type="number"></td>
+      <td><input id="r1.3" type="number"></td>
+      <td>=</td>
+      <td><input id="rd0" type="number"></td>
+    </tr>
+    <tr>
+      <td><input id="r2.1" type="number"></td>
+      <td><input id="r2.2" type="number"></td>
+      <td><input id="r2.3" type="number"></td>
+      <td>=</td>
+      <td><input id="rd1" type="number"></td>
+    </tr>
+    <tr>
+      <td><input id="r3.1" type="number"></td>
+      <td><input id="r3.2" type="number"></td>
+      <td><input id="r3.3" type="number"></td>
+      <td>=</td>
+      <td><input id="rd2" type="number"></td>
+    </tr>
+  </table>
+
+  <button onclick="solveCramer()"><strong>Solve with Cramer's Rule</strong></button>
+
+  <div class="result" id="output"></div>
+
+  <script>
+    function formatNumber(n) {
+      if (typeof n !== "number" || isNaN(n) || !isFinite(n)) return "error";
+      return parseFloat(n.toFixed(6)).toString();
+    }
+
+    function formatMatrixWithDivider(matrix, lastCol) {
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      let M = matrix;
+      if (lastCol) {
+        M = matrix.map((row, i) => [...row, lastCol[i]]);
+      }
+
+      const totalCols = lastCol ? cols + 1 : cols;
+      const colWidths = new Array(totalCols).fill(0);
+      for (let c = 0; c < totalCols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const valStr = formatNumber(M[r][c]);
+          if (valStr.length > colWidths[c]) colWidths[c] = valStr.length;
+        }
+      }
+
+      const leftBrackets = ['⎡', '⎢', '⎣'];
+      const rightBrackets = ['⎤', '⎥', '⎦'];
+      const dividerBeforeCol = totalCols - 2;
+
+      return M.map((row, r) => {
+        const left = leftBrackets[r] || '⎢';
+        const right = rightBrackets[r] || '⎥';
+        const rowStr = row.map((val, c) => {
+          let str = formatNumber(val).padStart(colWidths[c], ' ');
+          if (c === dividerBeforeCol) str += ' |';
+          return str;
+        }).join('  ');
+        return `${left} ${rowStr} ${right}`;
+      }).join('\n');
+    }
+
+    function formatAugmentedMatrix(A, B) {
+      return formatMatrixWithDivider(A, B);
+    }
+
+    function formatDeterminantMatrix(matrix, labelName) {
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      const colWidths = new Array(cols).fill(0);
+      for (let c = 0; c < cols; c++) {
+        for (let r = 0; r < rows; r++) {
+          const valStr = formatNumber(matrix[r][c]);
+          if (valStr.length > colWidths[c]) colWidths[c] = valStr.length;
+        }
+      }
+
+      const leftBrackets = ['⎡', '⎢', '⎣'];
+      const rightBrackets = ['⎤', '⎥', '⎦'];
+      const matrixStr = matrix.map((row, r) => {
+        const left = leftBrackets[r] || '⎢';
+        const right = rightBrackets[r] || '⎥';
+        const rowStr = row.map((val, c) => formatNumber(val).padStart(colWidths[c], ' ')).join('  ');
+        return `${left} ${rowStr} ${right}`;
+      }).join('\n');
+
+      return `${labelName} = \n\n${matrixStr}\n`;
+    }
+
+    function determinant3x3Verbose(m, label = 'A') {
+      const [a, b, c] = m[0];
+      const [d, e, f] = m[1];
+      const [g, h, i] = m[2];
+
+      const part1 = a * (e * i - f * h);
+      const part2 = -b * (d * i - f * g);
+      const part3 = c * (d * h - e * g);
+      const det = part1 + part2 + part3;
+
+      const labelName = label === 'A' ? 'D' : label === 'Ax' ? 'Dx' : label === 'Ay' ? 'Dy' : 'Dz';
+      const matrixStr = formatDeterminantMatrix(m, labelName);
+
+      const steps = 
+ `${matrixStr} 
+(${labelName}) = ${a}(${e}×${i} − ${f}×${h}) − ${b}(${d}×${i} − ${f}×${g}) + ${c}(${d}×${h} − ${e}×${g})
+            = ${a}(${e*i} − ${f*h}) − ${b}(${d*i} − ${f*g}) + ${c}(${d*h} − ${e*g})
+            = ${a}(${e*i - f*h}) − ${b}(${d*i - f*g}) + ${c}(${d*h - e*g})
+            = ${part1} + ${part2} + ${part3}
+            = ${det}
+`;
+
+      return { det, steps };
+    }
+
+    function matrixReplaceColumn(matrix, columnIndex, newColumn) {
+      return matrix.map((row, i) => {
+        const newRow = row.slice();
+        newRow[columnIndex] = newColumn[i];
+        return newRow;
+      });
+    }
+
+    function solveCramer() {
+      const A = [], B = [];
+      for (let i = 0; i < 3; i++) {
+        A[i] = [];
+        for (let j = 0; j < 3; j++) {
+          const id = `r${i+1}.${j+1}`;
+          A[i][j] = parseFloat(document.getElementById(id).value) || 0;
+        }
+        B[i] = parseFloat(document.getElementById(`rd${i}`).value) || 0;
+      }
+
+      const Ax = matrixReplaceColumn(A, 0, B);
+      const Ay = matrixReplaceColumn(A, 1, B);
+      const Az = matrixReplaceColumn(A, 2, B);
+
+      const { det: detA, steps: stepsA } = determinant3x3Verbose(A, 'A');
+      const { det: detX, steps: stepsX } = determinant3x3Verbose(Ax, 'Ax');
+      const { det: detY, steps: stepsY } = determinant3x3Verbose(Ay, 'Ay');
+      const { det: detZ, steps: stepsZ } = determinant3x3Verbose(Az, 'Az');
+
+      let output = "NOTE:\nThis solution uses Cramer's Rule, which solves a system of 3 equations with 3 unknowns by calculating determinants.\nWe compute determinant of the original matrix (D), and then replace one column at a time with the constants column to compute Dx, Dy, and Dz.\nThen, solve for each variable using x = Dx/D, y = Dy/D, and z = Dz/D using cross multiplication in each matrix.\n\n";
+
+      output += "Solution: \n\n";
+      output += 'Original Matrix:\n\n';
+      output += formatAugmentedMatrix(A, B) + '\n\n';
+      output += stepsA + '\n';
+      output += stepsX + '\n';
+      output += stepsY + '\n';
+      output += stepsZ + '\n';
+
+      if (detA === 0) {
+        output += "No final Answer. Enter value(s) or check your matrix.";
+      } else {
+        const x = detX / detA;
+        const y = detY / detA;
+        const z = detZ / detA;
+
+        output += "\nSolution for x,y,z:\n";
+        output += `x = Dx / D = ${formatNumber(detX)} / ${formatNumber(detA)} = ${formatNumber(x)}\n`;
+        output += `y = Dy / D = ${formatNumber(detY)} / ${formatNumber(detA)} = ${formatNumber(y)}\n`;
+        output += `z = Dz / D = ${formatNumber(detZ)} / ${formatNumber(detA)} = ${formatNumber(z)}\n`;
+
+        output += `\nFinal Answer:\n`;
+        output += `x = ${formatNumber(x)}\n`;
+        output += `y = ${formatNumber(y)}\n`;
+        output += `z = ${formatNumber(z)}\n`;
+      }
+
+      document.getElementById('output').textContent = output;
+    }
+  </script>
+</body>
+</html>
